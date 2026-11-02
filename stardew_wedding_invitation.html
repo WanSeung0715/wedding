@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>우리 결혼합니다 💍 | 스타듀 웨딩</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: 둥근 픽셀 감성의 Galmuri11 & NeoDunggeunmo -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #121016;
+      font-family: 'Galmuri11', 'NeoDunggeunmo', sans-serif;
+    }
+
+    /* 스타듀밸리풍 레트로 우드 & 골드 UI 프레임 */
+    .stardew-box {
+      background: #e6b27e;
+      border: 4px solid #5a3219;
+      box-shadow: 
+        inset 0 0 0 2px #f8d8b0,
+        inset 0 0 0 4px #b87c4c,
+        0 4px 10px rgba(0,0,0,0.5);
+      border-radius: 8px;
+      position: relative;
+    }
+    .stardew-box-dark {
+      background: #3a2318;
+      border: 4px solid #1a0f0a;
+      box-shadow: inset 0 0 0 2px #5a3219;
+      border-radius: 8px;
+      color: #f7eedb;
+    }
+    .stardew-btn {
+      background: #df9755;
+      border: 3px solid #502713;
+      box-shadow: inset 0 2px 0 #fbd4a6, inset 0 -2px 0 #9f5424, 0 3px 0 #281206;
+      color: #3e1b09;
+      text-shadow: 0 1px 0 #ffe8cc;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: all 0.1s ease;
+    }
+    .stardew-btn:active {
+      transform: translateY(2px);
+      box-shadow: inset 0 1px 0 #fbd4a6, inset 0 -1px 0 #9f5424, 0 1px 0 #281206;
+    }
+
+    /* 픽셀 렌더링 최적화 */
+    canvas {
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-crisp-edges;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* 커스텀 스크롤바 */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #e6b27e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #773f1d;
+      border-radius: 3px;
+    }
+
+    /* 부드러운 모달 애니메이션 */
+    .modal-enter {
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* 말풍선 둥실둥실 애니메이션 */
+    @keyframes bobbing {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .bob {
+      animation: bobbing 1.8s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-full w-full relative">
+
+  <!-- 상단 네비게이션 & 게임 HUD -->
+  <header class="absolute top-0 left-0 right-0 z-30 p-2 pointer-events-none flex justify-between items-center">
+    <!-- 신랑 신부 D-Day 배지 -->
+    <div class="pointer-events-auto stardew-box px-3 py-1 flex items-center space-x-2 text-xs text-[#44220e]">
+      <span class="text-base">🔔</span>
+      <div>
+        <div class="font-bold tracking-wider">민수 ❤️ 지은 결혼식</div>
+        <div class="text-[10px] text-[#704221]" id="dday-text">2026. 11. 21 (토) 낮 12:30</div>
+      </div>
+    </div>
+
+    <!-- 우측 상단 유틸리티 버튼들 -->
+    <div class="pointer-events-auto flex items-center space-x-1.5">
+      <!-- BGM 토글 -->
+      <button id="bgm-btn" class="stardew-btn p-2 text-xs flex items-center justify-center w-9 h-9" title="배경음악 켜기/끄기">
+        <span id="bgm-icon">🔇</span>
+      </button>
+      <!-- 캐릭터 리롤 버튼 -->
+      <button id="reroll-btn" class="stardew-btn p-2 text-xs flex items-center justify-center w-9 h-9" title="하객 룩 다시 뽑기">
+        <span>🎲</span>
+      </button>
+      <!-- 전통 청첩장 모드 열기 -->
+      <button id="summary-btn" class="stardew-btn px-2.5 h-9 text-xs flex items-center space-x-1">
+        <span>📜</span>
+        <span class="hidden sm:inline">모바일 청첩장 보기</span>
+        <span class="sm:hidden">요약</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 메인 캔버스 뷰포트 -->
+  <main class="relative flex-1 w-full h-full overflow-hidden bg-[#241c2c]">
+    <canvas id="gameCanvas" class="w-full h-full block cursor-pointer"></canvas>
+
+    <!-- 인터랙션 안내 힌트 토스트 (캐릭터가 접근했을 때) -->
+    <div id="interact-hint" class="absolute bottom-20 left-1/2 -translate-x-1/2 pointer-events-none hidden z-20">
+      <div class="stardew-box px-3 py-1.5 text-xs text-[#451f0b] font-bold flex items-center space-x-2 shadow-lg bob">
+        <span class="bg-[#d2691e] text-white px-1.5 py-0.5 rounded text-[10px]">TOUCH</span>
+        <span id="hint-text">신랑/신부에게 말 걸기</span>
+      </div>
+    </div>
+
+    <!-- 터치 이동 목적지 핑 마커 -->
+    <div id="tap-marker" class="absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden z-10">
+      <div class="w-full h-full rounded-full border-2 border-yellow-300 animate-ping opacity-75"></div>
+      <div class="absolute inset-1.5 rounded-full bg-yellow-400 opacity-60"></div>
+    </div>
+
+    <!-- 모바일 가상 패드 (조이스틱/D-pad 토글 지원) -->
+    <div id="dpad-container" class="absolute bottom-4 left-4 z-20 opacity-85 select-none pointer-events-auto">
+      <div class="relative w-28 h-28 bg-[#442b1d]/80 border-2 border-[#834f2a] rounded-full p-1 shadow-2xl backdrop-blur-sm">
+        <button data-dir="up" class="dpad-btn absolute top-1 left-1/2 -translate-x-1/2 w-9 h-9 bg-[#bc7c49] active:bg-[#e49f65] border-2 border-[#542911] rounded-t-lg flex items-center justify-center text-white text-xs">▲</button>
+        <button data-dir="down" class="dpad-btn absolute bottom-1 left-1/2 -translate-x-1/2 w-9 h-9 bg-[#bc7c49] active:bg-[#e49f65] border-2 border-[#542911] rounded-b-lg flex items-center justify-center text-white text-xs">▼</button>
+        <button data-dir="left" class="dpad-btn absolute left-1 top-1/2 -translate-y-1/2 w-9 h-9 bg-[#bc7c49] active:bg-[#e49f65] border-2 border-[#542911] rounded-l-lg flex items-center justify-center text-white text-xs">◀</button>
+        <button data-dir="right" class="dpad-btn absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 bg-[#bc7c49] active:bg-[#e49f65] border-2 border-[#542911] rounded-r-lg flex items-center justify-center text-white text-xs">▶</button>
+        <div class="absolute inset-0 m-auto w-7 h-7 bg-[#653b1e] rounded-full flex items-center justify-center text-[10px] text-amber-200">★</div>
+      </div>
+    </div>
+
+    <!-- 하단 빠른 액션 바 (신랑신부, 사진첩, 방명록, 오시는길) -->
+    <div class="absolute bottom-3 right-3 z-20 flex space-x-1.5 pointer-events-auto">
+      <button onclick="openModal('npc')" class="stardew-btn px-2.5 py-1.5 text-xs flex items-center space-x-1">
+        <span>💌</span><span class="text-[11px]">인사말</span>
+      </button>
+      <button onclick="openModal('gallery')" class="stardew-btn px-2.5 py-1.5 text-xs flex items-center space-x-1">
+        <span>🖼️</span><span class="text-[11px]">사진첩</span>
+      </button>
+      <button onclick="openModal('guestbook')" class="stardew-btn px-2.5 py-1.5 text-xs flex items-center space-x-1">
+        <span>✍️</span><span class="text-[11px]">방명록</span>
+      </button>
+      <button onclick="openModal('location')" class="stardew-btn px-2.5 py-1.5 text-xs flex items-center space-x-1">
+        <span>📍</span><span class="text-[11px]">식장안내</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- ======================= 모달 창 레이어들 ======================= -->
+
+  <!-- 1. 신랑 & 신부 대화창 (스타듀밸리 스타일 초상화 대화창) -->
+  <div id="modal-npc" class="fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-4">
+    <div class="stardew-box w-full max-w-md p-4 text-[#3e1b09] modal-enter relative">
+      <button onclick="closeModal('modal-npc')" class="absolute top-2 right-2 w-7 h-7 bg-[#9f3f2a] text-white rounded font-bold text-xs border border-[#521a0e]">✕</button>
+      
+      <!-- 초상화 및 신랑 신부 소개 -->
+      <div class="flex items-center space-x-3 border-b-2 border-[#b57a48] pb-3 mb-3">
+        <!-- 픽셀 초상화 캔버스 -->
+        <canvas id="portraitCanvas" width="70" height="70" class="border-2 border-[#542911] rounded bg-[#faedd9] shadow-inner"></canvas>
+        <div>
+          <div class="text-xs text-[#824419] font-bold">새로운 인생을 시작하는 부부</div>
+          <h2 class="text-base font-extrabold text-[#3a1a09]">신랑 김민수 & 신부 이지은</h2>
+          <p class="text-[11px] text-[#69391b]">2026년 11월 21일 토요일 낮 12시 30분</p>
+        </div>
+      </div>
+
+      <!-- 대화 본문 -->
+      <div class="stardew-box-dark p-3 text-xs leading-relaxed space-y-2 mb-3">
+        <p class="text-amber-200">"스타듀밸리의 농장처럼 소박하지만 따스하고 서로를 풍요롭게 채워주는 부부가 되겠습니다."</p>
+        <p class="text-gray-200">저희의 뜻깊은 첫걸음에 귀한 발걸음으로 함께해 주시어 축복해 주시면 더없는 기쁨으로 간직하겠습니다.</p>
+      </div>
+
+      <!-- 신랑/신부 연락하기 & 축의 계좌 열기 버튼 -->
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="openModal('contact')" class="stardew-btn py-2 text-xs flex items-center justify-center space-x-1">
+          <span>📞</span><span>신랑 & 신부에게 연락</span>
+        </button>
+        <button onclick="openModal('bank')" class="stardew-btn py-2 text-xs flex items-center justify-center space-x-1">
+          <span>🎁</span><span>마음 전하실 곳 (축의)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 웨딩 갤러리 (도트 액자 프레임) -->
+  <div id="modal-gallery" class="fixed inset-0 z-50 bg-black/70 hidden items-center justify-center p-3">
+    <div class="stardew-box w-full max-w-md p-4 text-[#3e1b09] modal-enter relative">
+      <button onclick="closeModal('modal-gallery')" class="absolute top-2 right-2 w-7 h-7 bg-[#9f3f2a] text-white rounded font-bold text-xs border border-[#521a0e]">✕</button>
+      <div class="flex items-center space-x-2 mb-3 border-b-2 border-[#b57a48] pb-2">
+        <span class="text-lg">🖼️</span>
+        <h3 class="font-bold text-sm">웨딩 포토 갤러리</h3>
+      </div>
+
+      <!-- 메인 사진 뷰어 -->
+      <div class="relative bg-[#221712] border-4 border-[#7b4621] rounded-lg overflow-hidden flex items-center justify-center h-64 shadow-inner">
+        <div id="gallery-image-display" class="w-full h-full flex flex-col items-center justify-center p-3 text-center transition-all duration-300">
+          <!-- 픽셀 감성 일러스트 웨딩 화보 씬 -->
+          <div id="gallery-photo-art" class="w-full h-full rounded flex flex-col items-center justify-center text-white relative">
+            <!-- 캔버스에 픽셀 웨딩 무드 렌더링 -->
+            <canvas id="photoCanvas" width="280" height="200" class="rounded border border-[#a4683c]"></canvas>
+            <div id="photo-caption" class="absolute bottom-2 px-3 py-1 bg-black/70 text-amber-200 text-xs rounded border border-amber-500/50">
+              꽃길만 걸을게요 🌿
+            </div>
+          </div>
+        </div>
+
+        <!-- 좌우 화살표 -->
+        <button onclick="changePhoto(-1)" class="absolute left-2 w-8 h-8 rounded bg-[#5b3319]/80 text-white flex items-center justify-center font-bold active:scale-95 border border-[#c18652]">◀</button>
+        <button onclick="changePhoto(1)" class="absolute right-2 w-8 h-8 rounded bg-[#5b3319]/80 text-white flex items-center justify-center font-bold active:scale-95 border border-[#c18652]">▶</button>
+      </div>
+
+      <!-- 썸네일 점 인디케이터 -->
+      <div class="flex justify-center space-x-1.5 mt-2.5" id="gallery-dots"></div>
+    </div>
+  </div>
+
+  <!-- 3. 방명록 작성 & 축하 메시지 목록 -->
+  <div id="modal-guestbook" class="fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-4">
+    <div class="stardew-box w-full max-w-md p-4 text-[#3e1b09] modal-enter relative max-h-[90vh] flex flex-col">
+      <button onclick="closeModal('modal-guestbook')" class="absolute top-2 right-2 w-7 h-7 bg-[#9f3f2a] text-white rounded font-bold text-xs border border-[#521a0e]">✕</button>
+      
+      <div class="flex items-center space-x-2 border-b-2 border-[#b57a48] pb-2 mb-2">
+        <span class="text-lg">✍️</span>
+        <div>
+          <h3 class="font-bold text-sm">축하 방명록</h3>
+          <p class="text-[10px] text-[#69391b]">작성하신 글은 마을 광장 내 캐릭터의 말풍선으로 띄워집니다!</p>
+        </div>
+      </div>
+
+      <!-- 방명록 입력 폼 -->
+      <div class="bg-[#f5dac1] p-2.5 rounded border border-[#b27749] mb-3 space-y-2">
+        <div class="flex space-x-2">
+          <input type="text" id="guest-name" placeholder="하객 이름/별명" maxlength="10" class="w-1/2 px-2 py-1 text-xs border border-[#8b4f24] rounded bg-[#fff7ef] focus:outline-none focus:ring-1 focus:ring-[#8b4f24]">
+          <select id="guest-relation" class="w-1/2 px-2 py-1 text-xs border border-[#8b4f24] rounded bg-[#fff7ef] focus:outline-none">
+            <option value="신랑측 하객">신랑측 하객</option>
+            <option value="신부측 하객">신부측 하객</option>
+            <option value="신랑 직장동료">신랑 직장동료</option>
+            <option value="신부 직장동료">신부 직장동료</option>
+            <option value="절친">학창시절 절친</option>
+          </select>
+        </div>
+        <div class="flex space-x-2">
+          <input type="text" id="guest-msg" placeholder="두 사람에게 축하의 한마디를 남겨주세요 (최대 35자)" maxlength="35" class="flex-1 px-2 py-1 text-xs border border-[#8b4f24] rounded bg-[#fff7ef] focus:outline-none focus:ring-1 focus:ring-[#8b4f24]">
+          <button onclick="saveGuestbookEntry()" class="stardew-btn px-3 py-1 text-xs font-bold whitespace-nowrap">남기기</button>
+        </div>
+      </div>
+
+      <!-- 방명록 목록 -->
+      <div id="guestbook-list" class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-56"></div>
+    </div>
+  </div>
+
+  <!-- 4. 오시는 길 & 식장 안내 -->
+  <div id="modal-location" class="fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-4">
+    <div class="stardew-box w-full max-w-md p-4 text-[#3e1b09] modal-enter relative">
+      <button onclick="closeModal('modal-location')" class="absolute top-2 right-2 w-7 h-7 bg-[#9f3f2a] text-white rounded font-bold text-xs border border-[#521a0e]">✕</button>
+      <div class="flex items-center space-x-2 mb-2 border-b-2 border-[#b57a48] pb-2">
+        <span class="text-lg">📍</span>
+        <h3 class="font-bold text-sm">오시는 길 & 예식 안내</h3>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="stardew-box-dark p-2.5 rounded">
+          <div class="font-bold text-amber-300 text-sm mb-1">그랜드 웨딩스퀘어 3층 그레이스홀</div>
+          <div class="text-gray-300">서울특별시 강남구 테헤란로 123 웨딩빌딩</div>
+          <div class="text-amber-200/80 mt-1 text-[11px]">📞 02-1234-5678</div>
+        </div>
+
+        <!-- 지도 바로가기 버튼들 -->
+        <div class="grid grid-cols-3 gap-1.5">
+          <a href="https://map.naver.com" target="_blank" class="stardew-btn py-2 text-center text-xs block">
+            <span class="text-green-800 font-extrabold">N</span> 네이버지도
+          </a>
+          <a href="https://map.kakao.com" target="_blank" class="stardew-btn py-2 text-center text-xs block">
+            <span class="text-yellow-900 font-extrabold">K</span> 카카오맵
+          </a>
+          <a href="https://tmap.co.kr" target="_blank" class="stardew-btn py-2 text-center text-xs block">
+            <span class="text-red-700 font-extrabold">T</span> 티맵
+          </a>
+        </div>
+
+        <!-- 교통 및 주차 상세 -->
+        <div class="bg-[#edd1b3] p-2.5 rounded border border-[#a2683b] space-y-1.5 text-[11px] leading-snug">
+          <div><strong class="text-[#592b0c]">🚇 지하철:</strong> 2호선 / 신분당선 강남역 4번 출구 (도보 5분)</div>
+          <div><strong class="text-[#592b0c]">🚌 버스:</strong> 강남역 정류장 하차 (간선 146, 360, 740)</div>
+          <div><strong class="text-[#592b0c]">🚗 주차 안내:</strong> 건물 지하 2~4층 주차장 2시간 무료 (안내데스크 등록)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 마음 전하실 곳 (축의 계좌 복사) -->
+  <div id="modal-bank" class="fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-4">
+    <div class="stardew-box w-full max-w-md p-4 text-[#3e1b09] modal-enter relative">
+      <button onclick="closeModal('modal-bank')" class="absolute top-2 right-2 w-7 h-7 bg-[#9f3f2a] text-white rounded font-bold text-xs border border-[#521a0e]">✕</button>
+      <div class="flex items-center space-x-2 mb-2 border-b-2 border-[#b57a48] pb-2">
+        <span class="text-lg">💌</span>
+        <h3 class="font-bold text-sm">마음 전하실 곳 (축의금)</h3>
+      </div>
+      <p class="text-[11px] text-[#69391b] mb-3">참석이 어려워 축하하는 마음을 보내주실 분들을 위해 계좌번호를 안내드립니다.</p>
+
+      <div class="space-y-2 text-xs">
+        <!-- 신랑측 -->
+        <div class="bg-[#fceddc] p-2.5 rounded border border-[#b27749]">
+          <div class="font-bold text-[#623113] mb-1">신랑측 계좌번호</div>
+          <div class="flex justify-between items-center text-[11px] bg-white/70 p-1.5 rounded">
+            <span>국민 123402-04-567890 (예금주: 김민수)</span>
+            <button onclick="copyAccount('국민 123402-04-567890')" class="stardew-btn px-2 py-0.5 text-[10px]">복사</button>
+          </div>
+          <div class="flex justify-between items-center text-[11px] bg-white/70 p-1.5 rounded mt-1">
+            <span>신한 110-345-678901 (혼주: 김철수)</span>
+            <button onclick="copyAccount('신한 110-345-678901')" class="stardew-btn px-2 py-0.5 text-[10px]">복사</button>
+          </div>
+        </div>
+
+        <!-- 신부측 -->
+        <div class="bg-[#fceddc] p-2.5 rounded border border-[#b27749]">
+          <div class="font-bold text-[#623113] mb-1">신부측 계좌번호</div>
+          <div class="flex justify-between items-center text-[11px] bg-white/70 p-1.5 rounded">
+            <span>카카오뱅크 3333-01-9876543 (예금주: 이지은)</span>
+            <button onclick="copyAccount('카카오뱅크 3333-01-9876543')" class="stardew-btn px-2 py-0.5 text-[10px]">복사</button>
+          </div>
+          <div class="flex justify-between items-center text-[11px] bg-white/70 p-1.5 rounded mt-1">
+            <span>우리 1002-890-123456 (혼주: 이영호)</span>
+            <button onclick="copyAccount('우리 1002-890-123456')" class="stardew-btn px-2 py-0.5 text-[10px]">복사</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. 신랑 & 신부 연락처 모달 -->
+  <div id="modal-contact" class="fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-4">
+    <div class="stardew-box w-full max-w-sm p-4 text-[#3e1b09] modal-enter relative">
+      <button onclick="closeModal('modal-contact')" class="absolute top-2 right-2 w-7 h-7 bg-[#9f3f2a] text-white rounded font-bold text-xs border border-[#521a0e]">✕</button>
+      <h3 class="font-bold text-sm mb-3 border-b-2 border-[#b57a48] pb-1">📞 축하 연락처</h3>
+      <div class="space-y-2 text-xs">
+        <div class="flex justify-between items-center bg-[#faedd9] p-2 rounded border border-[#c18652]">
+          <span>신랑 김민수</span>
+          <a href="tel:010-0000-0000" class="stardew-btn px-3 py-1 text-[11px]">전화하기</a>
+        </div>
+        <div class="flex justify-between items-center bg-[#faedd9] p-2 rounded border border-[#c18652]">
+          <span>신부 이지은</span>
+          <a href="tel:010-1111-1111" class="stardew-btn px-3 py-1 text-[11px]">전화하기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. 청첩장 요약 보기 (전통 청첩장 슬라이드 모달) -->
+  <div id="modal-summary" class="fixed inset-0 z-50 bg-black/70 hidden items-center justify-center p-3">
+    <div class="stardew-box w-full max-w-md p-4 text-[#3e1b09] modal-enter relative max-h-[92vh] flex flex-col">
+      <button onclick="closeModal('modal-summary')" class="absolute top-2 right-2 w-7 h-7 bg-[#9f3f2a] text-white rounded font-bold text-xs border border-[#521a0e]">✕</button>
+      <div class="flex items-center space-x-2 mb-2 border-b-2 border-[#b57a48] pb-2">
+        <span class="text-xl">💐</span>
+        <h3 class="font-bold text-sm">모바일 청첩장 안내서</h3>
+      </div>
+      <div class="flex-1 overflow-y-auto space-y-4 pr-1 text-xs">
+        <div class="text-center py-3 bg-[#faedd9] rounded border border-[#cb8d59]">
+          <div class="text-[#7d3b0e] text-[11px] mb-1">WEDDING INVITATION</div>
+          <div class="text-base font-extrabold text-[#3d1a08]">김민수 & 이지은</div>
+          <div class="text-[11px] text-[#69391b] mt-1">2026년 11월 21일 토요일 낮 12시 30분</div>
+          <div class="text-[11px] text-[#69391b]">그랜드 웨딩스퀘어 3층 그레이스홀</div>
+        </div>
+
+        <div class="stardew-box-dark p-3 text-center space-y-2 text-xs">
+          <p class="text-amber-200">살며시 스며든 사랑이 결실을 맺어<br>평생을 함께할 약속을 맺습니다.</p>
+          <p class="text-stone-300">귀한 시간 내어 찾아와 축복해 주시면<br>더없이 큰 기쁨으로 간직하겠습니다.</p>
+          <div class="pt-2 text-[11px] text-amber-100/90 border-t border-amber-900/60">
+            김철수 · 박영희 의 장남 <strong>민수</strong><br>
+            이영호 · 최순자 의 장녀 <strong>지은</strong>
+          </div>
+        </div>
+
+        <!-- 캘린더 등록 -->
+        <button onclick="addToGoogleCalendar()" class="w-full stardew-btn py-2 text-xs flex items-center justify-center space-x-1">
+          <span>📅</span><span>구글 캘린더에 일정 등록하기</span>
+        </button>
+
+        <!-- 바로가기 그룹 -->
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="openModal('location')" class="stardew-btn py-2 text-xs">📍 식장 오시는 길</button>
+          <button onclick="openModal('bank')" class="stardew-btn py-2 text-xs">🎁 축의금 전송</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 간단 토스트 메시지 -->
+  <div id="toast" class="fixed top-12 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 -translate-y-2">
+    <div class="stardew-box px-4 py-2 text-xs text-[#3a1805] font-bold shadow-xl border-2 border-[#542911]" id="toast-msg">
+      계좌번호가 복사되었습니다!
+    </div>
+  </div>
+
+  <!-- ======================= 스크립트 영역 ======================= -->
+  <script>
+    /* -------------------------------------------------------------
+       1. 오디오 합성 시스템 (Web Audio API - 8비트 웨딩 칩튠 BGM)
+       ------------------------------------------------------------- */
+    let audioCtx = null;
+    let isBgmPlaying = false;
+    let bgmTimer = null;
+
+    // 칩튠 멜로디 (스타듀밸리 + 바그너 결혼행진곡 모티브)
+    const weddingMelody = [
+      { note: "C4", dur: 0.5 }, { note: "F4", dur: 0.75 }, { note: "F4", dur: 0.25 }, { note: "F4", dur: 0.5 },
+      { note: "C4", dur: 0.5 }, { note: "G4", dur: 0.75 }, { note: "E4", dur: 0.25 }, { note: "F4", dur: 0.75 },
+      { note: "C4", dur: 0.25 }, { note: "F4", dur: 0.5 }, { note: "A4", dur: 0.5 }, { note: "C5", dur: 0.75 },
+      { note: "A4", dur: 0.25 }, { note: "F4", dur: 0.5 }, { note: "G4", dur: 0.5 }, { note: "F4", dur: 1.0 },
+      // 변주 파트
+      { note: "A4", dur: 0.5 }, { note: "A4", dur: 0.5 }, { note: "A4", dur: 0.5 }, { note: "Bb4", dur: 0.25 }, { note: "A4", dur: 0.25 },
+      { note: "G4", dur: 0.5 }, { note: "F4", dur: 0.5 }, { note: "G4", dur: 1.0 },
+      { note: "C4", dur: 0.5 }, { note: "F4", dur: 0.75 }, { note: "F4", dur: 0.25 }, { note: "F4", dur: 0.5 },
+      { note: "C4", dur: 0.5 }, { note: "G4", dur: 0.75 }, { note: "E4", dur: 0.25 }, { note: "F4", dur: 1.2 }
+    ];
+
+    const noteFreqs = {
+      "C4": 261.63, "D4": 293.66, "E4": 329.63, "F4": 349.23,
+      "G4": 392.00, "A4": 440.00, "Bb4": 466.16, "B4": 493.88,
+      "C5": 523.25, "D5": 587.33
+    };
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, duration, type = "square", gainVal = 0.08) {
+      if (!audioCtx || !isBgmPlaying) return;
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+      gainNode.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    let noteIndex = 0;
+    function playMelodyLoop() {
+      if (!isBgmPlaying) return;
+      const item = weddingMelody[noteIndex];
+      const freq = noteFreqs[item.note] || 261.63;
+      
+      // 멜로디 (펄스/정방형) + 서브 베이스 (따뜻한 삼각파)
+      playTone(freq, item.dur * 0.9, "square", 0.06);
+      playTone(freq / 2, item.dur * 0.8, "triangle", 0.09);
+
+      noteIndex = (noteIndex + 1) % weddingMelody.length;
+      bgmTimer = setTimeout(playMelodyLoop, item.dur * 560);
+    }
+
+    function toggleBGM() {
+      initAudio();
+      isBgmPlaying = !isBgmPlaying;
+      const icon = document.getElementById("bgm-icon");
+      if (isBgmPlaying) {
+        icon.textContent = "🔊";
+        showToast("🎵 배경음악이 켜졌습니다!");
+        noteIndex = 0;
+        playMelodyLoop();
+      } else {
+        icon.textContent = "🔇";
+        showToast("🔇 배경음악이 꺼졌습니다.");
+        clearTimeout(bgmTimer);
+      }
+    }
+
+    /* -------------------------------------------------------------
+       2. 하객 캐릭터 커스터마이징 시스템 (랜덤 생성 & 저장)
+       ------------------------------------------------------------- */
+    const STYLES = {
+      genders: ['female', 'male'],
+      skinTones: ['#f8d5b8', '#ffdfc4', '#e2b389', '#eed0b0'],
+      hairColors: ['#2e1b12', '#4b2d18', '#6b4c35', '#242426', '#b38258'],
+      hairStylesFemale: ['bob', 'bun', 'wavy'],
+      hairStylesMale: ['short', 'curly', 'middle_part'],
+      outfitsFemale: [
+        { name: '핑크 민소매 원피스', dress: '#f494ab', sub: '#e37792' },
+        { name: '올리브 롱 원피스', dress: '#7d8e63', sub: '#5e7145' },
+        { name: '블루 셔츠 & 슬랙스', top: '#8eb5d4', bottom: '#485563' },
+        { name: '베이지 블라우스 & 스커트', top: '#dfcca9', bottom: '#3b435b' }
+      ],
+      outfitsMale: [
+        { name: '체크 셔츠 & 베이지 치노', top: '#cbd5c0', pattern: '#7a8b6e', bottom: '#cbb592' },
+        { name: '네이비 포멀 수트', top: '#2c3e5a', bottom: '#2c3e5a', inner: '#f0f3f6' },
+        { name: '브라운 가디건 & 셔츠', top: '#8a5c38', bottom: '#443f3b', inner: '#eee3cd' },
+        { name: '블랙 블레이저 룩', top: '#25262a', bottom: '#575b63', inner: '#ffffff' }
+      ],
+      accessoriesFemale: ['none', 'earring', 'crossbag'],
+      accessoriesMale: ['none', 'glasses', 'watch']
+    };
+
+    let guestPlayer = null;
+
+    function generateRandomGuest() {
+      const gender = STYLES.genders[Math.floor(Math.random() * STYLES.genders.length)];
+      const skin = STYLES.skinTones[Math.floor(Math.random() * STYLES.skinTones.length)];
+      const hairColor = STYLES.hairColors[Math.floor(Math.random() * STYLES.hairColors.length)];
+      
+      let hairStyle, outfit, accessory;
+      if (gender === 'female') {
+        hairStyle = STYLES.hairStylesFemale[Math.floor(Math.random() * STYLES.hairStylesFemale.length)];
+        outfit = STYLES.outfitsFemale[Math.floor(Math.random() * STYLES.outfitsFemale.length)];
+        accessory = STYLES.accessoriesFemale[Math.floor(Math.random() * STYLES.accessoriesFemale.length)];
+      } else {
+        hairStyle = STYLES.hairStylesMale[Math.floor(Math.random() * STYLES.hairStylesMale.length)];
+        outfit = STYLES.outfitsMale[Math.floor(Math.random() * STYLES.outfitsMale.length)];
+        accessory = STYLES.accessoriesMale[Math.floor(Math.random() * STYLES.accessoriesMale.length)];
+      }
+
+      return {
+        gender, skin, hairColor, hairStyle, outfit, accessory,
+        x: 400, y: 560,
+        targetX: 400, targetY: 560,
+        direction: 0, // 0: 하(down), 1: 상(up), 2: 좌(left), 3: 우(right)
+        animFrame: 0,
+        animTimer: 0,
+        isMoving: false,
+        speed: 2.8,
+        bubbleMsg: null,
+        bubbleTimer: 0
+      };
+    }
+
+    function initGuestPlayer() {
+      const saved = localStorage.getItem('wedding_guest_char');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          guestPlayer = { ...generateRandomGuest(), ...parsed, x: 400, y: 560, targetX: 400, targetY: 560 };
+          return;
+        } catch(e) {}
+      }
+      guestPlayer = generateRandomGuest();
+      saveGuestPlayer();
+    }
+
+    function saveGuestPlayer() {
+      if (!guestPlayer) return;
+      const dataToSave = {
+        gender: guestPlayer.gender,
+        skin: guestPlayer.skin,
+        hairColor: guestPlayer.hairColor,
+        hairStyle: guestPlayer.hairStyle,
+        outfit: guestPlayer.outfit,
+        accessory: guestPlayer.accessory
+      };
+      localStorage.setItem('wedding_guest_char', JSON.stringify(dataToSave));
+    }
+
+    function rerollGuest() {
+      const currentPos = { x: guestPlayer.x, y: guestPlayer.y, dir: guestPlayer.direction };
+      guestPlayer = generateRandomGuest();
+      guestPlayer.x = currentPos.x;
+      guestPlayer.y = currentPos.y;
+      guestPlayer.targetX = currentPos.x;
+      guestPlayer.targetY = currentPos.y;
+      guestPlayer.direction = currentPos.dir;
+      saveGuestPlayer();
+      showToast("🎲 새로운 하객 패션으로 변신했습니다!");
+    }
+
+    /* -------------------------------------------------------------
+       3. 캔버스 맵 & 상호작용 오브젝트 구성
+       ------------------------------------------------------------- */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 맵 월드 크기
+    const WORLD_WIDTH = 800;
+    const WORLD_HEIGHT = 700;
+
+    // 카메라 뷰포트
+    const camera = { x: 0, y: 0 };
+
+    // 인터랙션 오브젝트 정의
+    const interactiveObjects = [
+      { id: 'groom_bride', name: '신랑 & 신부', x: 400, y: 155, radius: 46, hint: '신랑 & 신부 인사말 보기', action: () => openModal('npc') },
+      { id: 'phototable', name: '포토 테이블', x: 130, y: 390, radius: 40, hint: '웨딩 사진첩 열기', action: () => openModal('gallery') },
+      { id: 'registry', name: '방명록 데스크', x: 670, y: 220, radius: 42, hint: '축하 방명록 남기기', action: () => openModal('guestbook') },
+      { id: 'cash_desk', name: '축의대', x: 300, y: 220, radius: 40, hint: '축의금 계좌 안내', action: () => openModal('bank') }
+    ];
+
+    // 꽃잎 파티클 시스템
+    const petals = [];
+    for (let i = 0; i < 35; i++) {
+      petals.push({
+        x: Math.random() * WORLD_WIDTH,
+        y: Math.random() * WORLD_HEIGHT,
+        size: Math.random() * 4 + 3,
+        speedX: Math.random() * 1 - 0.3,
+        speedY: Math.random() * 0.8 + 0.6,
+        rot: Math.random() * Math.PI,
+        rotSpeed: Math.random() * 0.04 - 0.02,
+        color: ['#ffd4e2', '#ffebf2', '#fbb6ce', '#fff1f2'][Math.floor(Math.random() * 4)]
+      });
+    }
+
+    /* -------------------------------------------------------------
+       4. 픽셀 캐릭터 절차적 렌더링 엔진 (3프레임 4방향 걷기)
+       ------------------------------------------------------------- */
+    function drawPixelCharacter(ctx, char, x, y, isNPC = false, npcType = null) {
+      ctx.save();
+      ctx.translate(Math.round(x), Math.round(y));
+
+      // 발 밑 그림자
+      ctx.fillStyle = 'rgba(15, 8, 25, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(0, 4, 13, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const dir = char.direction; // 0: 하, 1: 상, 2: 좌, 3: 우
+      const frame = char.isMoving ? Math.floor(char.animFrame) : 0; // 0: 멈춤, 1: 왼발, 2: 오른발
+
+      // 좌우 반전 처리
+      let flip = false;
+      if (dir === 3) { // 우측은 좌측의 거울상
+        flip = true;
+        ctx.scale(-1, 1);
+      }
+
+      // ================= NPC 렌더링 =================
+      if (isNPC) {
+        if (npcType === 'groom') {
+          // 신랑 (안경, 수트, 단정한 도트)
+          drawGroomSprite(ctx);
+        } else if (npcType === 'bride') {
+          // 신부 (머메이드 드레스, 부케)
+          drawBrideSprite(ctx);
+        }
+        ctx.restore();
+        return;
+      }
+
+      // ================= 하객 캐릭터 렌더링 =================
+      const skin = char.skin;
+      const hairColor = char.hairColor;
+      const outfit = char.outfit;
+
+      // 발/다리 걷기 오프셋
+      let legLeftY = 0, legRightY = 0;
+      let bodyBob = 0;
+      if (char.isMoving) {
+        if (frame === 1) { legLeftY = -2; legRightY = 2; bodyBob = -1; }
+        else if (frame === 2) { legLeftY = 2; legRightY = -2; bodyBob = -1; }
+      }
+
+      // 1) 다리 및 신발 (신발 색상: 다크 브라운)
+      ctx.fillStyle = '#2a1e17';
+      if (dir === 0 || dir === 1) {
+        // 앞 / 뒤
+        ctx.fillRect(-7, -4 + legLeftY, 5, 8);
+        ctx.fillRect(2, -4 + legRightY, 5, 8);
+      } else {
+        // 측면
+        ctx.fillRect(-4, -4 + legLeftY, 8, 8);
+      }
+
+      // 2) 하의 또는 원피스 치마
+      if (outfit.dress) {
+        // 원피스
+        ctx.fillStyle = outfit.dress;
+        if (dir === 0 || dir === 1) {
+          ctx.beginPath();
+          ctx.moveTo(-10, -8 + bodyBob);
+          ctx.lineTo(10, -8 + bodyBob);
+          ctx.lineTo(13, 0);
+          ctx.lineTo(-13, 0);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.fillRect(-8, -8 + bodyBob, 14, 8);
+        }
+      } else {
+        // 슬랙스/바지
+        ctx.fillStyle = outfit.bottom;
+        if (dir === 0 || dir === 1) {
+          ctx.fillRect(-8, -12 + bodyBob, 6, 9 + legLeftY);
+          ctx.fillRect(2, -12 + bodyBob, 6, 9 + legRightY);
+        } else {
+          ctx.fillRect(-6, -12 + bodyBob, 11, 9 + legLeftY);
+        }
+      }
+
+      // 3) 상체 (의상 & 팔)
+      const topColor = outfit.dress || outfit.top;
+      ctx.fillStyle = topColor;
+      ctx.fillRect(-9, -24 + bodyBob, 18, 14);
+
+      // 의상 포인트 (셔츠 칼라 or 체크무늬 or 넥타이)
+      if (outfit.inner) {
+        ctx.fillStyle = outfit.inner;
+        ctx.fillRect(-3, -24 + bodyBob, 6, 8);
+      }
+      if (outfit.pattern) {
+        ctx.fillStyle = outfit.pattern;
+        ctx.fillRect(-8, -21 + bodyBob, 16, 2);
+        ctx.fillRect(-8, -17 + bodyBob, 16, 2);
+      }
+
+      // 팔/손 (걷기 시 팔 흔들림)
+      ctx.fillStyle = skin;
+      let armLeftY = 0, armRightY = 0;
+      if (char.isMoving) {
+        armLeftY = (frame === 1) ? 2 : -2;
+        armRightY = (frame === 1) ? -2 : 2;
+      }
+      if (dir === 0 || dir === 1) {
+        ctx.fillRect(-12, -22 + bodyBob + armLeftY, 3, 10);
+        ctx.fillRect(9, -22 + bodyBob + armRightY, 3, 10);
+      } else {
+        ctx.fillRect(2, -22 + bodyBob + armLeftY, 4, 10);
+      }
+
+      // 악세사리: 가방
+      if (char.accessory === 'crossbag') {
+        ctx.strokeStyle = '#422517';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-8, -23 + bodyBob);
+        ctx.lineTo(6, -11 + bodyBob);
+        ctx.stroke();
+        ctx.fillStyle = '#221611';
+        ctx.fillRect(4, -13 + bodyBob, 6, 5);
+      }
+
+      // 4) 머리 & 얼굴 (피부)
+      ctx.fillStyle = skin;
+      ctx.fillRect(-10, -42 + bodyBob, 20, 19);
+
+      // 눈 & 입 (앞/옆모습일 때)
+      if (dir !== 1) { // 뒤가 아닐 때
+        ctx.fillStyle = '#27170e';
+        if (dir === 0) {
+          // 정면 눈
+          ctx.fillRect(-6, -34 + bodyBob, 3, 4);
+          ctx.fillRect(3, -34 + bodyBob, 3, 4);
+          // 볼터치
+          ctx.fillStyle = '#ff9999';
+          ctx.fillRect(-7, -29 + bodyBob, 3, 2);
+          ctx.fillRect(4, -29 + bodyBob, 3, 2);
+          // 입
+          ctx.fillStyle = '#c75b5b';
+          ctx.fillRect(-2, -29 + bodyBob, 4, 1.5);
+        } else {
+          // 측면 눈
+          ctx.fillRect(-6, -34 + bodyBob, 3, 4);
+          ctx.fillStyle = '#ff9999';
+          ctx.fillRect(-7, -29 + bodyBob, 3, 2);
+        }
+      }
+
+      // 악세사리: 안경
+      if (char.accessory === 'glasses' && dir !== 1) {
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 1.2;
+        if (dir === 0) {
+          ctx.strokeRect(-7, -35 + bodyBob, 5, 5);
+          ctx.strokeRect(2, -35 + bodyBob, 5, 5);
+          ctx.beginPath(); ctx.moveTo(-2, -32 + bodyBob); ctx.lineTo(2, -32 + bodyBob); ctx.stroke();
+        } else {
+          ctx.strokeRect(-7, -35 + bodyBob, 5, 5);
+          ctx.beginPath(); ctx.moveTo(-2, -33 + bodyBob); ctx.lineTo(4, -34 + bodyBob); ctx.stroke();
+        }
+      }
+
+      // 5) 헤어스타일
+      ctx.fillStyle = hairColor;
+      if (dir === 1) {
+        // 뒷모습 헤어 (머리 전체를 덮음)
+        ctx.fillRect(-11, -44 + bodyBob, 22, 22);
+        if (char.hairStyle === 'bun') {
+          ctx.beginPath();
+          ctx.arc(0, -46 + bodyBob, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        // 앞/옆 헤어
+        ctx.fillRect(-11, -45 + bodyBob, 22, 9); // 정수리
+        if (char.gender === 'female') {
+          if (char.hairStyle === 'bun') {
+            ctx.beginPath();
+            ctx.arc(0, -47 + bodyBob, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(-11, -40 + bodyBob, 4, 11);
+            ctx.fillRect(7, -40 + bodyBob, 4, 11);
+          } else if (char.hairStyle === 'bob') {
+            ctx.fillRect(-12, -42 + bodyBob, 4, 17);
+            ctx.fillRect(8, -42 + bodyBob, 4, 17);
+          } else {
+            ctx.fillRect(-12, -42 + bodyBob, 5, 22);
+            ctx.fillRect(7, -42 + bodyBob, 5, 22);
+          }
+        } else {
+          // 남성 헤어
+          ctx.fillRect(-11, -42 + bodyBob, 3, 9);
+          ctx.fillRect(8, -42 + bodyBob, 3, 9);
+        }
+      }
+
+      // 말풍선이 있는 경우
+      if (char.bubbleMsg && char.bubbleTimer > 0) {
+        drawSpeechBubble(ctx, char.bubbleMsg, 0, -56 + bodyBob);
+      }
+
+      ctx.restore();
+    }
+
+    // 신랑 NPC 도트 스프라이트
+    function drawGroomSprite(ctx) {
+      // 신랑: 단정한 네이비 턱시도, 화이트 셔츠, 골드 타이, 안경
+      ctx.fillStyle = '#1e2436';
+      // 바지
+      ctx.fillRect(-7, -4, 5, 9);
+      ctx.fillRect(2, -4, 5, 9);
+      // 구두
+      ctx.fillStyle = '#111';
+      ctx.fillRect(-7, 5, 5, 3);
+      ctx.fillRect(2, 5, 5, 3);
+      // 상의 재킷
+      ctx.fillStyle = '#22324f';
+      ctx.fillRect(-9, -24, 18, 15);
+      // 셔츠 & 타이
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-3, -24, 6, 9);
+      ctx.fillStyle = '#dfb56c';
+      ctx.fillRect(-1.5, -22, 3, 6);
+      // 얼굴
+      ctx.fillStyle = '#ffd5b8';
+      ctx.fillRect(-10, -42, 20, 19);
+      // 눈 & 안경
+      ctx.fillStyle = '#221a14';
+      ctx.fillRect(-6, -34, 3, 4);
+      ctx.fillRect(3, -34, 3, 4);
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(-7, -35, 5, 5);
+      ctx.strokeRect(2, -35, 5, 5);
+      ctx.beginPath(); ctx.moveTo(-2, -33); ctx.lineTo(2, -33); ctx.stroke();
+      // 머리 (깔끔한 투블럭 댄디컷)
+      ctx.fillStyle = '#2c272a';
+      ctx.fillRect(-11, -45, 22, 10);
+      ctx.fillRect(-11, -40, 3, 8);
+      ctx.fillRect(8, -40, 3, 8);
+      // 네임태그
+      drawNameTag(ctx, '신랑 민수 🤵', 0, -52, '#2563eb');
+    }
+
+    // 신부 NPC 도트 스프라이트
+    function drawBrideSprite(ctx) {
+      // 신부: 우아한 순백 머메이드 드레스, 화관/베일, 카라 부케
+      // 드레스 트레인 (밑단 퍼짐)
+      ctx.fillStyle = '#f8f9fa';
+      ctx.beginPath();
+      ctx.moveTo(-11, -12);
+      ctx.lineTo(11, -12);
+      ctx.lineTo(17, 7);
+      ctx.lineTo(-17, 7);
+      ctx.closePath();
+      ctx.fill();
+      // 드레스 음영
+      ctx.fillStyle = '#e5e7eb';
+      ctx.fillRect(-7, -8, 14, 14);
+
+      // 상체 탑
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-8, -23, 16, 12);
+      // 팔 & 부케
+      ctx.fillStyle = '#ffd5b8';
+      ctx.fillRect(-10, -22, 3, 8);
+      ctx.fillRect(7, -22, 3, 8);
+      // 카라 부케 (화이트 꽃망울 + 그린 줄기)
+      ctx.fillStyle = '#4ade80';
+      ctx.fillRect(-3, -15, 6, 7);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, -17, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 얼굴
+      ctx.fillStyle = '#ffd5b8';
+      ctx.fillRect(-9, -41, 18, 19);
+      // 반짝이는 눈 & 볼터치
+      ctx.fillStyle = '#39241b';
+      ctx.fillRect(-5, -33, 3, 4);
+      ctx.fillRect(2, -33, 3, 4);
+      ctx.fillStyle = '#f472b6';
+      ctx.fillRect(-6, -28, 3, 2);
+      ctx.fillRect(3, -28, 3, 2);
+
+      // 헤어스타일 (브라운 번 올림머리)
+      ctx.fillStyle = '#4a2c1b';
+      ctx.fillRect(-10, -44, 20, 9);
+      ctx.fillRect(-11, -38, 3, 9);
+      ctx.fillRect(8, -38, 3, 9);
+      // 번(올림머리) & 화관
+      ctx.beginPath();
+      ctx.arc(0, -46, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fbcfe8';
+      ctx.fillRect(-5, -45, 10, 2);
+
+      // 네임태그
+      drawNameTag(ctx, '신부 지은 👰', 0, -54, '#ec4899');
+    }
+
+    function drawNameTag(ctx, text, x, y, bgColor) {
+      ctx.save();
+      ctx.font = '10px Galmuri11';
+      const width = ctx.measureText(text).width + 8;
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(x - width / 2, y - 10, width, 14);
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    function drawSpeechBubble(ctx, text, x, y) {
+      ctx.save();
+      ctx.font = '11px Galmuri11';
+      const textWidth = ctx.measureText(text).width;
+      const bw = Math.max(textWidth + 14, 60);
+      const bh = 22;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#44220e';
+      ctx.lineWidth = 2;
+      
+      // 말풍선 본체
+      ctx.beginPath();
+      ctx.roundRect(x - bw / 2, y - bh, bw, bh, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // 말풍선 꼬리
+      ctx.beginPath();
+      ctx.moveTo(x - 4, y);
+      ctx.lineTo(x + 4, y);
+      ctx.lineTo(x, y + 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#3a1805';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, x, y - 6);
+      ctx.restore();
+    }
+
+    /* -------------------------------------------------------------
+       5. 맵 배경 렌더링 (그레이스홀 + 로비)
+       ------------------------------------------------------------- */
+    function renderMap(ctx) {
+      // 1) 고급 대리석 바닥 타일
+      const tileSize = 40;
+      for (let y = 0; y < WORLD_HEIGHT; y += tileSize) {
+        for (let x = 0; x < WORLD_WIDTH; x += tileSize) {
+          const isAlt = ((x / tileSize) + (y / tileSize)) % 2 === 0;
+          ctx.fillStyle = isAlt ? '#e7e5e4' : '#dedad6';
+          ctx.fillRect(x, y, tileSize, tileSize);
+          // 타일 줄눈
+          ctx.strokeStyle = '#cac5be';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, tileSize, tileSize);
+        }
+      }
+
+      // 2) 벽면 & 아치 기둥 (상단)
+      ctx.fillStyle = '#443b35';
+      ctx.fillRect(0, 0, WORLD_WIDTH, 90);
+      ctx.fillStyle = '#5c4e43';
+      ctx.fillRect(0, 75, WORLD_WIDTH, 15);
+
+      // 장식 액자들
+      ctx.fillStyle = '#b48a52';
+      ctx.fillRect(80, 20, 60, 40);
+      ctx.fillRect(660, 20, 60, 40);
+      ctx.fillStyle = '#fae3c7';
+      ctx.fillRect(84, 24, 52, 32);
+      ctx.fillRect(664, 24, 52, 32);
+
+      // 3) 단상 & 버진로드 (Grace Wedding Stage)
+      // 단상 베이스
+      ctx.fillStyle = '#292524';
+      ctx.fillRect(250, 90, 300, 70);
+      ctx.fillStyle = '#3a3532';
+      ctx.fillRect(260, 100, 280, 50);
+
+      // 화려한 웨딩 아치와 플라워 데코레이션
+      ctx.strokeStyle = '#dfc28d';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(400, 95, 75, Math.PI, 0);
+      ctx.stroke();
+
+      // 아치 위 플라워 뭉치 (핑크, 화이트, 그린)
+      for (let i = 0; i < 28; i++) {
+        const angle = Math.PI + (i / 27) * Math.PI;
+        const fx = 400 + Math.cos(angle) * 75;
+        const fy = 95 + Math.sin(angle) * 75;
+        ctx.fillStyle = (i % 2 === 0) ? '#ffffff' : '#fbcfe8';
+        ctx.beginPath();
+        ctx.arc(fx + (Math.sin(i) * 3), fy + (Math.cos(i) * 3), 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 버진로드 (검은 대리석 + 은은한 광택)
+      ctx.fillStyle = '#1c1917';
+      ctx.fillRect(360, 160, 80, 260);
+      ctx.fillStyle = '#292524';
+      ctx.fillRect(364, 160, 72, 260);
+
+      // 버진로드 양옆 캔들 & 플라워 로드
+      for (let y = 175; y <= 400; y += 45) {
+        // 좌측 꽃 & 캔들
+        ctx.fillStyle = '#fbbf24'; // 촛불
+        ctx.fillRect(348, y, 4, 6);
+        ctx.fillStyle = '#ffffff'; // 꽃
+        ctx.beginPath(); ctx.arc(350, y + 10, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath(); ctx.arc(348, y + 12, 4, 0, Math.PI * 2); ctx.fill();
+
+        // 우측 꽃 & 캔들
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(448, y, 4, 6);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(450, y + 10, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath(); ctx.arc(452, y + 12, 4, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // 4) 가구 오브젝트 렌더링
+      // [좌측 하단] 포토 테이블
+      drawPhotoTable(ctx, 130, 390);
+
+      // [우측 상단] 방명록 데스크
+      drawDesk(ctx, 670, 220, '방명록 데스크 📖');
+
+      // [중앙 상단 좌측] 축의대
+      drawDesk(ctx, 300, 220, '축의대 💌');
+
+      // [중앙 하객 테이블들]
+      drawGuestTable(ctx, 220, 330);
+      drawGuestTable(ctx, 580, 330);
+      drawGuestTable(ctx, 200, 480);
+      drawGuestTable(ctx, 600, 480);
+
+      // 샹들리에 은은한 빛 반사
+      const gradient = ctx.createRadialGradient(400, 120, 20, 400, 120, 220);
+      gradient.addColorStop(0, 'rgba(254, 240, 138, 0.28)');
+      gradient.addColorStop(1, 'rgba(254, 240, 138, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(150, 0, 500, 350);
+    }
+
+    function drawPhotoTable(ctx, x, y) {
+      ctx.save();
+      ctx.translate(x, y);
+      // 테이블
+      ctx.fillStyle = '#854d0e';
+      ctx.fillRect(-45, -12, 90, 28);
+      ctx.fillStyle = '#a16207';
+      ctx.fillRect(-43, -10, 86, 12);
+
+      // 웨딩 액자들
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(-35, -28, 18, 20);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-33, -26, 14, 16);
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(-12, -32, 22, 24);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(-10, -30, 18, 20);
+
+      // 화병
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(25, -16, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath(); ctx.arc(25, -22, 5, 0, Math.PI * 2); ctx.fill();
+
+      // 이름 라벨
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(-32, 20, 64, 14);
+      ctx.fillStyle = '#fff';
+      ctx.font = '9px Galmuri11';
+      ctx.textAlign = 'center';
+      ctx.fillText('포토테이블 🖼️', 0, 30);
+      ctx.restore();
+    }
+
+    function drawDesk(ctx, x, y, title) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(-45, -12, 90, 26);
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(-43, -10, 86, 10);
+
+      // 방명록 책/봉투
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-15, -18, 16, 12);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(10, -16, 12, 8);
+
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(-35, 18, 70, 14);
+      ctx.fillStyle = '#fff';
+      ctx.font = '9px Galmuri11';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, 0, 28);
+      ctx.restore();
+    }
+
+    function drawGuestTable(ctx, x, y) {
+      ctx.save();
+      ctx.translate(x, y);
+      // 원형 연회 테이블
+      ctx.fillStyle = '#1c1917';
+      ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 2; ctx.stroke();
+      // 테이블 위 캔들
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(-2, -6, 4, 8);
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath(); ctx.arc(0, -9, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    /* -------------------------------------------------------------
+       6. 게임 루프 & 업데이트 로직
+       ------------------------------------------------------------- */
+    let lastTime = performance.now();
+
+    function update(dt) {
+      if (!guestPlayer) return;
+
+      // 목적지로 이동 처리 (터치 또는 D-패드)
+      const dx = guestPlayer.targetX - guestPlayer.x;
+      const dy = guestPlayer.targetY - guestPlayer.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 3) {
+        guestPlayer.isMoving = true;
+        const moveDist = Math.min(dist, guestPlayer.speed * (dt * 60));
+        guestPlayer.x += (dx / dist) * moveDist;
+        guestPlayer.y += (dy / dist) * moveDist;
+
+        // 방향 결정 (각도 기준)
+        if (Math.abs(dx) > Math.abs(dy)) {
+          guestPlayer.direction = dx > 0 ? 3 : 2; // 우 / 좌
+        } else {
+          guestPlayer.direction = dy > 0 ? 0 : 1; // 하 / 상
+        }
+
+        // 걷기 애니메이션 프레임 루프 (0 -> 1 -> 0 -> 2)
+        guestPlayer.animTimer += dt * 7;
+        const f = Math.floor(guestPlayer.animTimer) % 4;
+        guestPlayer.animFrame = (f === 3) ? 0 : f;
+      } else {
+        guestPlayer.isMoving = false;
+        guestPlayer.animFrame = 0;
+        guestPlayer.animTimer = 0;
+        document.getElementById('tap-marker').classList.add('hidden');
+      }
+
+      // 말풍선 지속 타이머
+      if (guestPlayer.bubbleTimer > 0) {
+        guestPlayer.bubbleTimer -= dt;
+      }
+
+      // 꽃잎 파티클 업데이트
+      petals.forEach(p => {
+        p.y += p.speedY;
+        p.x += Math.sin(p.y * 0.02) * p.speedX;
+        p.rot += p.rotSpeed;
+        if (p.y > WORLD_HEIGHT) {
+          p.y = -10;
+          p.x = Math.random() * WORLD_WIDTH;
+        }
+      });
+
+      // 카메라가 플레이어를 중앙에 두도록 추적
+      const targetCamX = guestPlayer.x - canvas.width / 2;
+      const targetCamY = guestPlayer.y - canvas.height / 2;
+      camera.x += (Math.max(0, Math.min(WORLD_WIDTH - canvas.width, targetCamX)) - camera.x) * 0.1;
+      camera.y += (Math.max(0, Math.min(WORLD_HEIGHT - canvas.height, targetCamY)) - camera.y) * 0.1;
+
+      // 오브젝트 근접 상호작용 검사
+      checkNearObject();
+    }
+
+    let nearestObject = null;
+    function checkNearObject() {
+      nearestObject = null;
+      let minDist = 75;
+
+      for (const obj of interactiveObjects) {
+        const d = Math.hypot(guestPlayer.x - obj.x, guestPlayer.y - obj.y);
+        if (d < minDist) {
+          nearestObject = obj;
+          break;
+        }
+      }
+
+      const hintEl = document.getElementById('interact-hint');
+      const hintText = document.getElementById('hint-text');
+      if (nearestObject) {
+        hintText.textContent = nearestObject.hint;
+        hintEl.classList.remove('hidden');
+      } else {
+        hintEl.classList.add('hidden');
+      }
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      // 카메라 변환 적용
+      ctx.translate(-Math.round(camera.x), -Math.round(camera.y));
+
+      // 1) 맵 배경 렌더링
+      renderMap(ctx);
+
+      // 2) 신랑 신부 NPC 렌더링 (단상 중앙)
+      drawPixelCharacter(ctx, { direction: 0, isMoving: false }, 385, 145, true, 'groom');
+      drawPixelCharacter(ctx, { direction: 0, isMoving: false }, 415, 145, true, 'bride');
+
+      // 3) 플레이어(하객) 렌더링
+      drawPixelCharacter(ctx, guestPlayer, guestPlayer.x, guestPlayer.y);
+
+      // 4) 벚꽃잎 흩날림
+      petals.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size, p.size * 0.55, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    function gameLoop(now) {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      update(dt);
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    /* -------------------------------------------------------------
+       7. 터치 / 클릭 조작 및 가상 D-Pad 핸들러
+       ------------------------------------------------------------- */
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // 터치/클릭으로 걷기 이동
+    function handlePointerMove(e) {
+      if (e.target.closest('button') || e.target.closest('#dpad-container')) return;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const worldTargetX = clientX - rect.left + camera.x;
+      const worldTargetY = clientY - rect.top + camera.y;
+
+      // 이동 제한 범위
+      guestPlayer.targetX = Math.max(40, Math.min(WORLD_WIDTH - 40, worldTargetX));
+      guestPlayer.targetY = Math.max(120, Math.min(WORLD_HEIGHT - 40, worldTargetY));
+
+      // 탭 핑 마커 표시
+      const marker = document.getElementById('tap-marker');
+      marker.style.left = `${clientX}px`;
+      marker.style.top = `${clientY}px`;
+      marker.classList.remove('hidden');
+
+      // 사용자 첫 인터랙션 시 자동 BGM 재생 준비
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    canvas.addEventListener('click', (e) => {
+      // 만약 상호작용 힌트가 떠 있는 상태에서 오브젝트 근처를 클릭했다면 즉시 모달 열기
+      if (nearestObject) {
+        const rect = canvas.getBoundingClientRect();
+        const clickWorldX = e.clientX - rect.left + camera.x;
+        const clickWorldY = e.clientY - rect.top + camera.y;
+        if (Math.hypot(clickWorldX - nearestObject.x, clickWorldY - nearestObject.y) < nearestObject.radius) {
+          nearestObject.action();
+          return;
+        }
+      }
+      handlePointerMove(e);
+    });
+
+    // D-Pad 연속 이동
+    let dpadInterval = null;
+    document.querySelectorAll('.dpad-btn').forEach(btn => {
+      const dir = btn.dataset.dir;
+      const startMove = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearInterval(dpadInterval);
+        const step = 45;
+        const trigger = () => {
+          if (dir === 'up') guestPlayer.targetY = Math.max(120, guestPlayer.y - step);
+          if (dir === 'down') guestPlayer.targetY = Math.min(WORLD_HEIGHT - 40, guestPlayer.y + step);
+          if (dir === 'left') guestPlayer.targetX = Math.max(40, guestPlayer.x - step);
+          if (dir === 'right') guestPlayer.targetX = Math.min(WORLD_WIDTH - 40, guestPlayer.x + step);
+        };
+        trigger();
+        dpadInterval = setInterval(trigger, 120);
+      };
+      const stopMove = () => clearInterval(dpadInterval);
+
+      btn.addEventListener('touchstart', startMove);
+      btn.addEventListener('touchend', stopMove);
+      btn.addEventListener('mousedown', startMove);
+      btn.addEventListener('mouseup', stopMove);
+      btn.addEventListener('mouseleave', stopMove);
+    });
+
+    // 키보드 방향키 이동 지원
+    window.addEventListener('keydown', (e) => {
+      const step = 30;
+      if (e.key === 'ArrowUp' || e.key === 'w') guestPlayer.targetY = Math.max(120, guestPlayer.y - step);
+      if (e.key === 'ArrowDown' || e.key === 's') guestPlayer.targetY = Math.min(WORLD_HEIGHT - 40, guestPlayer.y + step);
+      if (e.key === 'ArrowLeft' || e.key === 'a') guestPlayer.targetX = Math.max(40, guestPlayer.x - step);
+      if (e.key === 'ArrowRight' || e.key === 'd') guestPlayer.targetX = Math.min(WORLD_WIDTH - 40, guestPlayer.x + step);
+      if (e.key === ' ' || e.key === 'Enter') {
+        if (nearestObject) nearestObject.action();
+      }
+    });
+
+    /* -------------------------------------------------------------
+       8. 모달 관리 & 포토 갤러리 & 방명록 로직
+       ------------------------------------------------------------- */
+    function openModal(id) {
+      const modal = document.getElementById(id.startsWith('modal-') ? id : `modal-${id}`);
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (id === 'gallery' || id === 'modal-gallery') renderCurrentPhoto();
+        if (id === 'npc' || id === 'modal-npc') renderPortrait();
+      }
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    // 초상화 캔버스 그리기
+    function renderPortrait() {
+      const pCanvas = document.getElementById('portraitCanvas');
+      const pctx = pCanvas.getContext('2d');
+      pctx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+      // 배경 그라데이션
+      pctx.fillStyle = '#fce7f3';
+      pctx.fillRect(0, 0, 70, 70);
+      // 신랑과 신부가 다정하게 서 있는 픽셀 얼굴
+      pctx.save();
+      pctx.translate(22, 60);
+      drawGroomSprite(pctx);
+      pctx.restore();
+
+      pctx.save();
+      pctx.translate(48, 60);
+      drawBrideSprite(pctx);
+      pctx.restore();
+    }
+
+    // 사진첩 데이터 (픽셀 무드로 그려지는 5장의 웨딩 씬)
+    const weddingPhotos = [
+      { title: '첫 만남, 가을 은행나무 아래에서', bg: '#fef08a', theme: 'autumn' },
+      { title: '제주 바다 노을 속 웨딩 스냅', bg: '#fda4af', theme: 'sunset' },
+      { title: '우리의 따스한 홈 스튜디오', bg: '#e2e8f0', theme: 'studio' },
+      { title: '눈부신 햇살 속 야외 피크닉', bg: '#bbf7d0', theme: 'picnic' },
+      { title: '평생을 함께할 약속의 순간', bg: '#fbcfe8', theme: 'vow' }
+    ];
+    let photoIndex = 0;
+
+    function renderCurrentPhoto() {
+      const photo = weddingPhotos[photoIndex];
+      const pCanvas = document.getElementById('photoCanvas');
+      const pctx = pCanvas.getContext('2d');
+      pctx.clearRect(0, 0, 280, 200);
+
+      // 배경 테마 그리기
+      pctx.fillStyle = photo.bg;
+      pctx.fillRect(0, 0, 280, 200);
+
+      // 감성적인 픽셀 풍경 요소
+      if (photo.theme === 'sunset') {
+        pctx.fillStyle = '#fb7185';
+        pctx.beginPath(); pctx.arc(140, 110, 45, 0, Math.PI * 2); pctx.fill();
+        pctx.fillStyle = '#38bdf8';
+        pctx.fillRect(0, 140, 280, 60);
+      } else if (photo.theme === 'autumn') {
+        pctx.fillStyle = '#ca8a04';
+        pctx.fillRect(20, 40, 40, 100);
+        pctx.fillRect(220, 50, 40, 90);
+        pctx.fillStyle = '#eab308';
+        pctx.beginPath(); pctx.arc(40, 50, 35, 0, Math.PI * 2); pctx.fill();
+        pctx.beginPath(); pctx.arc(240, 60, 30, 0, Math.PI * 2); pctx.fill();
+      }
+
+      // 두 사람의 픽셀 전신 샷
+      pctx.save();
+      pctx.translate(120, 155);
+      drawGroomSprite(pctx);
+      pctx.restore();
+
+      pctx.save();
+      pctx.translate(155, 155);
+      drawBrideSprite(pctx);
+      pctx.restore();
+
+      // 하트 이펙트
+      pctx.fillStyle = '#ef4444';
+      pctx.font = '16px serif';
+      pctx.fillText('❤️', 133, 90);
+
+      document.getElementById('photo-caption').textContent = photo.title;
+
+      // 점 인디케이터 업데이트
+      const dotsEl = document.getElementById('gallery-dots');
+      dotsEl.innerHTML = '';
+      weddingPhotos.forEach((_, idx) => {
+        const dot = document.createElement('div');
+        dot.className = `w-2 h-2 rounded-full border border-[#5a2e12] ${idx === photoIndex ? 'bg-[#7a3915]' : 'bg-[#e2af82]'}`;
+        dotsEl.appendChild(dot);
+      });
+    }
+
+    function changePhoto(step) {
+      photoIndex = (photoIndex + step + weddingPhotos.length) % weddingPhotos.length;
+      renderCurrentPhoto();
+    }
+
+    // 방명록 시스템 (로컬스토리지 연동)
+    const defaultGuests = [
+      { name: '철수', relation: '신랑 절친', msg: '민수야 결혼 너무 축하한다! 행복하게 잘 살아라!' },
+      { name: '수진', relation: '신부 직장동료', msg: '지은 대리님 오늘 세상에서 제일 아름다우세요 👰 축하드려요!' },
+      { name: '동현', relation: '대학 동기', msg: '스타듀밸리 청첩장 대박이다 ㅋㅋㅋ 평생 행복해라!' }
+    ];
+
+    function getGuestbookData() {
+      const data = localStorage.getItem('wedding_guestbook');
+      return data ? JSON.parse(data) : defaultGuests;
+    }
+
+    function renderGuestbook() {
+      const list = getGuestbookData();
+      const container = document.getElementById('guestbook-list');
+      container.innerHTML = '';
+      list.forEach((item, index) => {
+        const el = document.createElement('div');
+        el.className = 'stardew-box-dark p-2 rounded text-xs leading-tight';
+        el.innerHTML = `
+          <div class="flex justify-between items-center text-amber-300 font-bold mb-1">
+            <span>${escapeHTML(item.name)} <span class="text-[10px] text-amber-100/70 font-normal">(${escapeHTML(item.relation)})</span></span>
+            <span class="text-[10px] text-gray-400">#${list.length - index}</span>
+          </div>
+          <div class="text-gray-100">${escapeHTML(item.msg)}</div>
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    function saveGuestbookEntry() {
+      const name = document.getElementById('guest-name').value.trim();
+      const relation = document.getElementById('guest-relation').value;
+      const msg = document.getElementById('guest-msg').value.trim();
+
+      if (!name) { showToast('이름을 입력해주세요!'); return; }
+      if (!msg) { showToast('축하 메시지를 입력해주세요!'); return; }
+
+      const list = getGuestbookData();
+      list.unshift({ name, relation, msg });
+      localStorage.setItem('wedding_guestbook', JSON.stringify(list));
+
+      // 플레이어 머리 위에 말풍선 띄우기!
+      guestPlayer.bubbleMsg = msg.length > 14 ? msg.substring(0, 14) + '..' : msg;
+      guestPlayer.bubbleTimer = 6.0;
+
+      document.getElementById('guest-name').value = '';
+      document.getElementById('guest-msg').value = '';
+
+      renderGuestbook();
+      closeModal('modal-guestbook');
+      showToast('💌 축하 메시지가 등록되었습니다!');
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    // 계좌번호 복사 유틸 (iframe 및 모바일 호환)
+    function copyAccount(text) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('📋 계좌번호가 복사되었습니다!');
+      } catch (err) {
+        showToast('복사에 실패했습니다.');
+      }
+      document.body.removeChild(textArea);
+    }
+
+    // 토스트 안내창
+    let toastTimer = null;
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toast-msg');
+      msg.textContent = text;
+      toast.classList.remove('opacity-0', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-2');
+      }, 2400);
+    }
+
+    // 구글 캘린더 등록
+    function addToGoogleCalendar() {
+      const title = encodeURIComponent("김민수 ❤️ 이지은 결혼식");
+      const details = encodeURIComponent("새로운 출발을 축하해주세요!\n장소: 그랜드 웨딩스퀘어 3층 그레이스홀");
+      const location = encodeURIComponent("서울특별시 강남구 테헤란로 123");
+      const dates = "20261121T033000Z/20261121T053000Z"; // 2026.11.21 12:30 KST
+      const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+      window.open(url, '_blank');
+    }
+
+    /* -------------------------------------------------------------
+       9. 초기화 및 이벤트 리스너 바인딩
+       ------------------------------------------------------------- */
+    window.onload = function () {
+      resizeCanvas();
+      initGuestPlayer();
+      renderGuestbook();
+
+      // UI 버튼들 바인딩
+      document.getElementById('bgm-btn').addEventListener('click', toggleBGM);
+      document.getElementById('reroll-btn').addEventListener('click', rerollGuest);
+      document.getElementById('summary-btn').addEventListener('click', () => openModal('summary'));
+
+      // 게임 루프 시작
+      lastTime = performance.now();
+      requestAnimationFrame(gameLoop);
+    };
+  </script>
+</body>
+</html>
